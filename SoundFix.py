@@ -11,4 +11,8 @@ def convert2wav(fitxer_mp3, fitxer_wav):
     """
     audio = AudioSegment.from_mp3(fitxer_mp3)
     audio.export(fitxer_wav, format = "wav") # Es guarda l'àudio en format WAV especificant la ruta i el format desitjat
-    
+
+fitxer_mp3 = "Summer_Wine.mp3"
+fitxer_wav = "Algo_bonito.wav"
+
+convert2wav(fitxer_mp3, fitxer_wav)    
