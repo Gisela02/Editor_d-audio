@@ -56,11 +56,11 @@ def retallar_audio(fitxer_wav, output_file, inici, duracio):
     sf.write(output_file, segment, samplerate)
     
 # Exemple d'ús
-#output_file = "Segment.wav"
-#inici =  5.0
-#duracio = 10.0
+output_file = "Segment.wav"
+inici =  5.0
+duracio = 20.0
 
-#retallar_audio(fitxer_wav, output_file, inici, duracio)
+retallar_audio(fitxer_wav, output_file, inici, duracio)
 
 def efecto_robot(input_file, output_file):
     """
@@ -72,17 +72,50 @@ def efecto_robot(input_file, output_file):
     
     # Apliquem l'efecte de robot
     factor = 0.8 #factor de modulació
+    factor_pitch = 0.9
     modulacio = np.arange(0, len(audio)) * (1.0 / samplerate) * factor
     mod = np.sin(2 * np.pi * modulacio)
     audio_ajustat = audio * mod[:, np.newaxis]
+    
     
     # Normalitzem els valors de l'àudio
     max_valor = np.max(np.abs(audio_ajustat))
     audio_modulat = audio_ajustat / max_valor
     
-    sf.write(output_file, audio_modulat, samplerate)
+    audio_robot = np.arange(0, len(audio_modulat)) * factor_pitch
+    
+    sf.write(output_file, audio_robot, samplerate)
  
-input_file = "Segment.wav"   
-output_file = "Popola.wav"
+#input_file = "Segment.wav"   
+#output_file = "Robot.wav"
 
-efecto_robot(input_file, output_file)
+#efecto_robot(input_file, output_file)
+
+
+def efecte_eco(input_file, output_file, delay=0.7, decay=0.5):
+    """
+    Aplica un efecte eco a un fitxer d'àudio WAV
+    
+    Args:
+        input_file(str): Ruta del fitxer d'entrada
+        output_file(str): Ruta del fitxer de sortida
+        delay (int): Temps de retràs en mil·lisegons per l'eco (per defecte: 1000ms)
+        decay (float): Factor de decaiment de l'eco (per defecte: 0.5)
+    """
+    # Carreguem el fitxer d'àudio
+    audio, samplerate = sf.read(input_file)
+    
+    delay_samples = int(delay * samplerate)
+
+    # Creem un arreglo per l'àudio de sortida
+    output_audio = np.zeros_like(audio)
+
+    # Aplicar l'efecto d'eco
+    for i in range(len(audio)):
+        if i >= delay_samples:
+            output_audio[i] = audio[i] + decay * output_audio[i - delay_samples]
+        else:
+            output_audio[i] = audio[i]
+
+    # Guardar el audio modificado en un archivo WAV
+    sf.write(output_file, output_audio, samplerate)
