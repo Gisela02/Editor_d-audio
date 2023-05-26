@@ -56,8 +56,33 @@ def retallar_audio(fitxer_wav, output_file, inici, duracio):
     sf.write(output_file, segment, samplerate)
     
 # Exemple d'ús
-output_file = "Segment.wav"
-inici =  5.0
-duracio = 10.0
+#output_file = "Segment.wav"
+#inici =  5.0
+#duracio = 10.0
 
-retallar_audio(fitxer_wav, output_file, inici, duracio)
+#retallar_audio(fitxer_wav, output_file, inici, duracio)
+
+def efecto_robot(input_file, output_file):
+    """
+    Aplica un efecte de robot a un fitxer d'audio WAV
+
+    """
+    # Llegim el fitxer d'àudio d'entrada
+    audio, samplerate = sf.read(input_file)
+    
+    # Apliquem l'efecte de robot
+    factor = 0.8 #factor de modulació
+    modulacio = np.arange(0, len(audio)) * (1.0 / samplerate) * factor
+    mod = np.sin(2 * np.pi * modulacio)
+    audio_ajustat = audio * mod[:, np.newaxis]
+    
+    # Normalitzem els valors de l'àudio
+    max_valor = np.max(np.abs(audio_ajustat))
+    audio_modulat = audio_ajustat / max_valor
+    
+    sf.write(output_file, audio_modulat, samplerate)
+ 
+input_file = "Segment.wav"   
+output_file = "Popola.wav"
+
+efecto_robot(input_file, output_file)
