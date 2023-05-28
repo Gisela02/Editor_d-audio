@@ -2,6 +2,7 @@ import numpy as np
 import soundfile as sf
 import sounddevice as sd
 from pydub import AudioSegment
+from pydub.effects import flanger
 
 # Funció que llegeix un fitxer d'àudio en .mp3 i el transforma a .wav
 #fm = 10000
@@ -110,12 +111,12 @@ def efecte_eco(input_file, output_file, delay=0.7, decay=0.5):
     # Creem un arreglo per l'àudio de sortida
     output_audio = np.zeros_like(audio)
 
-    # Aplicar l'efecto d'eco
+    # Apliquem l'efecte d'eco
     for i in range(len(audio)):
         if i >= delay_samples:
             output_audio[i] = audio[i] + decay * output_audio[i - delay_samples]
         else:
             output_audio[i] = audio[i]
 
-    # Guardar el audio modificado en un archivo WAV
+    # Guardem l'àudio modificat en un fitxer WAV
     sf.write(output_file, output_audio, samplerate)
