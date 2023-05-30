@@ -1,13 +1,15 @@
 import tkinter as tk
+import numpy
 from tkinter import filedialog
 from tkinter import messagebox
 from tkinter import ttk
 from tkinter import simpledialog
 from functools import partial
 from pydub import AudioSegment
-from audio_processor import AudioProcessor, EchoEffect, FlangerEffect, RobotEffect, PitufoEffect, LowEffect, LowPassFilter
+from audio_processor import AudioProcessor, EchoEffect, FlangerEffect, RobotEffect, PitufoEffect, LowEffect, LowPassFilter, HighPassFilter
 from PIL import Image
 from PIL import ImageTk
+#from playsound import playsound
 import ffmpeg
 import os
 
@@ -20,7 +22,7 @@ class SoundFix:
         self.root.geometry("800x700")
         
         # Agregar un fondo visualmente atractivo
-        self.background_image = tk.PhotoImage(file="backgr.png")
+        self.background_image = tk.PhotoImage(file="background.png")
         self.background_label = tk.Label(self.root, image=self.background_image)
         self.background_label.place(x=0, y=0, relwidth=1, relheight=1)
         
@@ -32,6 +34,7 @@ class SoundFix:
         
         self.input_file = None
         self.output_file = None
+        self.playing = False
 
         self.create_widgets()
 
@@ -58,10 +61,15 @@ class SoundFix:
         self.btn_trim_audio.pack()
         self.btn_trim_audio.place(relx=0.2, rely=0.85, anchor=tk.S)
 
-        # Botón para cargar y reproducir el audio
-        self.btn_load_and_play = ttk.Button(self.root, text="Cargar y Reproducir", command=self.load_and_play_audio)
+        # Botón per reproducir l'àudio
+        self.btn_load_and_play = ttk.Button(self.root, text="Play", command=self.load_and_play_audio)
         self.btn_load_and_play.pack()
         self.btn_load_and_play.place(relx=0.5, rely=0.85, anchor=tk.S)
+        
+        # Botó per parar la reproducció d'àudio
+        self.btn_stop_audio = ttk.Button(self.root, text="Pause", command=self.stop_audio)
+        self.btn_stop_audio.pack()
+        self.btn_stop_audio.place(relx=0.8, rely=0.85, anchor=tk.S)
 
         # Botó per aplicar l'efecte robot
         self.btn_robot_effect = ttk.Button(self.root, text="Aplicar Efecto Robot", command=self.apply_robot_effect)
@@ -81,17 +89,22 @@ class SoundFix:
         # Botó per aplicar l'efecte pitufo
         self.btn_pitufo_effect = ttk.Button(self.root, text="Aplicar Efecte Pitufo", command=self.apply_pitufo_effect)
         self.btn_pitufo_effect.pack()
-        self.btn_pitufo_effect.place(relx=0.2, rely=0.65, anchor=tk.S)
+        self.btn_pitufo_effect.place(relx=0.2, rely=0.55, anchor=tk.S)
         
         # Botó per aplicar l'efecte Low
         self.btn_low_effect = ttk.Button(self.root, text="Aplicar Efecte Low", command=self.apply_low_effect)
         self.btn_low_effect.pack()
-        self.btn_low_effect.place(relx=0.5, rely=0.65, anchor=tk.S)
+        self.btn_low_effect.place(relx=0.5, rely=0.55, anchor=tk.S)
         
         # Botó per aplicar l'efecte LPF
-        self.btn_lowPass_effect = ttk.Button(self.root, text="Aplicar Efecte LPF", command=self.apply_lowPass_effect)
+        self.btn_lowPass_effect = ttk.Button(self.root, text="Aplicar Efecte LPF", command=self.apply_lowpass_filter)
         self.btn_lowPass_effect.pack()
-        self.btn_lowPass_effect.place(relx=0.8, rely=0.65, anchor=tk.S)
+        self.btn_lowPass_effect.place(relx=0.8, rely=0.55, anchor=tk.S)
+        
+        # Botó per aplicar l'efecte HPF
+        self.btn_highPass_effect = ttk.Button(self.root, text="Aplicar Efecte HPF", command=self.apply_highpass_filter)
+        self.btn_highPass_effect.pack()
+        self.btn_highPass_effect.place(relx=0.5, rely=0.6, anchor=tk.S)
 
     def browse_input(self):
         self.input_file = filedialog.askopenfilename(filetypes=[("Audio Files", "*.wav *.mp3")])
@@ -129,7 +142,15 @@ class SoundFix:
             audio_processor = AudioProcessor(self.input_file)
             audio_processor.play_audio()
         else:
-            messagebox.showerror("Error", "Por favor, seleccione un archivo de entrada.")
+            messagebox.showerror("Error", "Por favor, seleccione un archivo de entrada.")
+    
+    def stop_audio(self):
+        if self.input_file:
+            audio_processor = AudioProcessor(self.input_file)
+            audio_processor.stop_audio()
+        else:
+            messagebox.showerror("Error", "Por favor, seleccione un archivo de entrada.")
+            
             
     def apply_robot_effect(self):
         if self.input_file:
@@ -181,7 +202,7 @@ class SoundFix:
         else:
             messagebox.showerror("Error", "Si us plau, seleccioni un fitxer d'entrada.")
     
-    def apply_lowPass_effect(self):
+    def apply_lowpass_filter(self):
         if self.input_file:
             lowPass_effect = LowPassFilter(self.input_file)
             input_filename, input_extension = os.path.splitext(self.input_file)
@@ -191,6 +212,15 @@ class SoundFix:
         else:
             messagebox.showerror("Error", "Si us plau, seleccioni un fitxer d'entrada.")
 
+    def apply_highpass_filter(self):
+        if self.input_file:
+            highPass_effect = HighPassFilter(self.input_file)
+            input_filename, input_extension = os.path.splitext(self.input_file)
+            output_file_highPass = input_filename + "_HighPass.wav"
+            highPass_effect.apply_highpass_filter(output_file_highPass)
+            messagebox.showinfo("Efecte HPF", "L'efecte High Pass Filter s'ha aplicat correctament!.")
+        else:
+            messagebox.showerror("Error", "Si us plau, seleccioni un fitxer d'entrada.")
 
 if __name__ == "__main__":
     root = tk.Tk()

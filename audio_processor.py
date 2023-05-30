@@ -6,6 +6,7 @@ import pyrubberband
 import librosa
 import subprocess
 import ffmpeg
+from pydub.playback import play
 
 class AudioProcessor:
     def __init__(self, input_file):
@@ -17,8 +18,10 @@ class AudioProcessor:
 
     def play_audio(self):
         sd.play(self.audio, self.samplerate)
-        sd.wait()
 
+    def stop_audio(self):
+        sd.stop(self.audio)
+    
     def trim_audio(self, output_file, start_time, duration):
         start_sample = int(start_time * self.samplerate)
         end_sample = int((start_time + duration) * self.samplerate)
@@ -108,10 +111,17 @@ class LowEffect(AudioProcessor):
             self.audio[:, channel] = modulated_audio
         sf.write(output_file, self.audio, self.samplerate)
 
-class LowPassFilter(AudioProcessor):
-    def apply_lowpass_filter(self, output_file, cutoff_frequency):
-        filtered_audio = self.audio.low_pass_filter(cutoff_frequency)
+class LowPassFilter(AudioProcessor):        
+    def apply_lowpass_filter(self, output_file, cutoff_frequency=1800):
+        audio = AudioSegment.from_file(self.input_file)
+        filtered_audio = audio.low_pass_filter(cutoff_frequency)
         filtered_audio.export(output_file, format='wav')
+
+class HighPassFilter(AudioProcessor):
+    def apply_highpass_filter(self, output_file, cutoff_frequency=1800):
+        audio = AudioSegment.from_file(self.input_file)
+        filtered_audio = audio.high_pass_filter(cutoff_frequency)
+        filtered_audio.export(output_file, format="wav")
 
 
 # Ejemplo de uso de las clases y la interfaz
