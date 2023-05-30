@@ -5,9 +5,11 @@ from tkinter import ttk
 from tkinter import simpledialog
 from functools import partial
 from pydub import AudioSegment
-from audio_processor import AudioProcessor, EchoEffect, FlangerEffect, RobotEffect
+from audio_processor import AudioProcessor, EchoEffect, FlangerEffect, RobotEffect, PitufoEffect, LowEffect, LowPassFilter
 from PIL import Image
 from PIL import ImageTk
+import ffmpeg
+import os
 
 #from audio_processor import RobotEffect
 
@@ -47,7 +49,7 @@ class SoundFix:
         # Botón para convertir un archivo MP3 a WAV
         self.btn_convert_to_wav = ttk.Button(self.root, text="Convertir a WAV", command=self.convert_to_wav)
         self.btn_convert_to_wav.pack()
-        self.btn_convert_to_wav.place(relx=0.5, rely=0.3, anchor=tk.S)        
+        self.btn_convert_to_wav.place(relx=0.7, rely=0.15, anchor=tk.S)        
 
         # Botón para recortar el audio
         button_img = Image.open("tall.png")
@@ -64,17 +66,32 @@ class SoundFix:
         # Botó per aplicar l'efecte robot
         self.btn_robot_effect = ttk.Button(self.root, text="Aplicar Efecto Robot", command=self.apply_robot_effect)
         self.btn_robot_effect.pack()
-        self.btn_robot_effect.place(relx=0.85, rely=0.5, anchor=tk.S)
+        self.btn_robot_effect.place(relx=0.8, rely=0.5, anchor=tk.S)
 
         # Botó per aplicar l'efecto eco
-        self.btn_echo_effect = ttk.Button(self.root, text="Aplicar Efecto Eco", command=self.apply_echo_effect,)
+        self.btn_echo_effect = ttk.Button(self.root, text="Aplicar Efecto Eco", command=self.apply_echo_effect)
         self.btn_echo_effect.pack()
-        self.btn_echo_effect.place(relx=0.25, rely=0.5, anchor=tk.S)
+        self.btn_echo_effect.place(relx=0.2, rely=0.5, anchor=tk.S)
         
         # Botó per aplicar l'efecte flanger
         self.btn_flanger_effect = ttk.Button(self.root, text="Aplicar Efecte Flanger", command=self.apply_flanger_effect)
         self.btn_flanger_effect.pack()
-        self.btn_flanger_effect.place(relx=0.55, rely=0.5, anchor=tk.S)
+        self.btn_flanger_effect.place(relx=0.5, rely=0.5, anchor=tk.S)
+
+        # Botó per aplicar l'efecte pitufo
+        self.btn_pitufo_effect = ttk.Button(self.root, text="Aplicar Efecte Pitufo", command=self.apply_pitufo_effect)
+        self.btn_pitufo_effect.pack()
+        self.btn_pitufo_effect.place(relx=0.2, rely=0.65, anchor=tk.S)
+        
+        # Botó per aplicar l'efecte Low
+        self.btn_low_effect = ttk.Button(self.root, text="Aplicar Efecte Low", command=self.apply_low_effect)
+        self.btn_low_effect.pack()
+        self.btn_low_effect.place(relx=0.5, rely=0.65, anchor=tk.S)
+        
+        # Botó per aplicar l'efecte LPF
+        self.btn_lowPass_effect = ttk.Button(self.root, text="Aplicar Efecte LPF", command=self.apply_lowPass_effect)
+        self.btn_lowPass_effect.pack()
+        self.btn_lowPass_effect.place(relx=0.8, rely=0.65, anchor=tk.S)
 
     def browse_input(self):
         self.input_file = filedialog.askopenfilename(filetypes=[("Audio Files", "*.wav *.mp3")])
@@ -82,18 +99,22 @@ class SoundFix:
 
     def convert_to_wav(self):
         if self.input_file:
-            audio_processor = AudioProcessor(self.input_file)
-            output_file_wav = "Summer_Wine.wav"
-            audio_processor.convert_to_wav(output_file_wav)
-            messagebox.showinfo("Convertir a WAV", "La conversión se ha realizado correctamente.")
+            input_filename, input_extension = os.path.splitext(self.input_file)
+            output_file_wav = input_filename + ".wav"
+            try:
+                ffmpeg.input(self.input_file).output(output_file_wav).run()
+                messagebox.showinfo("Convertir a WAV", "La conversión se ha realizado correctamente.")
+            except ffmpeg.Error as e:
+                messagebox.showerror("Error", f"Ocurrió un error durante la conversión: {str(e)}")
         else:
             messagebox.showerror("Error", "Por favor, seleccione un archivo de entrada.")
-
+    
     def trim_audio(self):
         if self.input_file:
             start_time = simpledialog.askfloat("Recortar Audio", "Ingrese el punto de inicio (en segundos):")
             duration = simpledialog.askfloat("Recortar Audio", "Ingrese la duración del recorte (en segundos):")
-            output_file_trimmed = "Segment.wav"
+            input_filename, input_extension = os.path.splitext(self.input_file)
+            output_file_trimmed = input_filename + "*_Tall.wav"
 
             audio_processor = AudioProcessor(self.input_file)
             audio_processor.trim_audio(output_file_trimmed, start_time, duration)
@@ -113,7 +134,8 @@ class SoundFix:
     def apply_robot_effect(self):
         if self.input_file:
             robot_effect = RobotEffect(self.input_file)
-            output_file_robot = "Robot.wav"
+            input_filename, input_extension = os.path.splitext(self.input_file)
+            output_file_robot = input_filename + "_Robot.wav"
             robot_effect.apply_robot_effect(output_file_robot)
             messagebox.showinfo("Efecte Robot", "L'efecte Robot s'ha aplicat correctament!.")
         else:
@@ -122,7 +144,8 @@ class SoundFix:
     def apply_echo_effect(self):
         if self.input_file:
             echo_effect = EchoEffect(self.input_file)
-            output_file_echo = "Echo.wav"
+            input_filename, input_extension = os.path.splitext(self.input_file)
+            output_file_echo = input_filename + "_Echo.wav"
             echo_effect.apply_echo_effect(output_file_echo)
             messagebox.showinfo("Efecte Eco", "L'efecte Eco s'ha aplicat correctament!.")
         else:
@@ -131,9 +154,40 @@ class SoundFix:
     def apply_flanger_effect(self):
         if self.input_file:
             flanger_effect = FlangerEffect(self.input_file)
-            output_file_flanger = "Flanger.wav"
+            input_filename, input_extension = os.path.splitext(self.input_file)
+            output_file_flanger = input_filename + "Flanger.wav"
             flanger_effect.apply_flanger_effect(output_file_flanger)
             messagebox.showinfo("Efecte Flanger", "L'efecte Flanger s'ha aplicat correctament!.")
+        else:
+            messagebox.showerror("Error", "Si us plau, seleccioni un fitxer d'entrada.")
+    
+    def apply_pitufo_effect(self):
+        if self.input_file:
+            pitufo_effect = PitufoEffect(self.input_file)
+            input_filename, input_extension = os.path.splitext(self.input_file)
+            output_file_pitufo = input_filename + "_Pitufo.wav"
+            pitufo_effect.apply_pitufo_effect(output_file_pitufo)
+            messagebox.showinfo("Efecte Pitufo", "L'efecte Pitufo s'ha aplicat correctament!.")
+        else:
+            messagebox.showerror("Error", "Si us plau, seleccioni un fitxer d'entrada.")
+            
+    def apply_low_effect(self):
+        if self.input_file:
+            low_effect = LowEffect(self.input_file)
+            input_filename, input_extension = os.path.splitext(self.input_file)
+            output_file_low = input_filename + "_Low.wav"
+            low_effect.apply_low_effect(output_file_low)
+            messagebox.showinfo("Efecte Low", "L'efecte Low s'ha aplicat correctament!.")
+        else:
+            messagebox.showerror("Error", "Si us plau, seleccioni un fitxer d'entrada.")
+    
+    def apply_lowPass_effect(self):
+        if self.input_file:
+            lowPass_effect = LowPassFilter(self.input_file)
+            input_filename, input_extension = os.path.splitext(self.input_file)
+            output_file_lowPass = input_filename + "_LowPass.wav"
+            lowPass_effect.apply_lowpass_filter(output_file_lowPass)
+            messagebox.showinfo("Efecte LPF", "L'efecte Low Pass Filter s'ha aplicat correctament!.")
         else:
             messagebox.showerror("Error", "Si us plau, seleccioni un fitxer d'entrada.")
 

@@ -5,6 +5,7 @@ from pydub import AudioSegment
 import pyrubberband
 import librosa
 import subprocess
+import ffmpeg
 
 class AudioProcessor:
     def __init__(self, input_file):
@@ -17,10 +18,6 @@ class AudioProcessor:
     def play_audio(self):
         sd.play(self.audio, self.samplerate)
         sd.wait()
-
-    def convert_to_wav(self, output_file):
-        audio = AudioSegment.from_mp3(self.input_file)
-        audio.export(output_file, format="wav")
 
     def trim_audio(self, output_file, start_time, duration):
         start_sample = int(start_time * self.samplerate)
@@ -80,6 +77,41 @@ class FlangerEffect(AudioProcessor):
             else:
                 flanger_audio[i] = self.audio[i]
         sf.write(output_file, flanger_audio, self.samplerate)
+
+class PitufoEffect(AudioProcessor):
+    def apply_pitufo_effect(self, output_file, modulation_factor=0.1, pitch_factor=0.9):
+        num_channels = self.audio.shape[1]
+        mod = (2 * np.pi * np.arange(0, len(self.audio)) * (1.0 / self.samplerate) * modulation_factor)
+
+        for channel in range(num_channels):
+            audio_1d = self.audio[:, channel]    
+            mod_channel = mod[:len(audio_1d)]  
+            indices = np.arange(len(audio_1d)) + mod_channel * self.samplerate * pitch_factor
+            modulated_audio = np.interp(indices, np.arange(len(audio_1d)), audio_1d)
+            max_value = np.max(np.abs(modulated_audio))
+            modulated_audio /= max_value
+            self.audio[:, channel] = modulated_audio
+        sf.write(output_file, self.audio, self.samplerate)
+
+class LowEffect(AudioProcessor):
+    def apply_low_effect(self, output_file, modulation_factor=0.1, pitch_factor=0.9):
+        num_channels = self.audio.shape[1]
+        mod = -(2 * np.pi * np.arange(0, len(self.audio)) * (1.0 / self.samplerate) * modulation_factor)
+
+        for channel in range(num_channels):
+            audio_1d = self.audio[:, channel]    
+            mod_channel = mod[:len(audio_1d)]  
+            indices = np.arange(len(audio_1d)) + mod_channel * self.samplerate * pitch_factor
+            modulated_audio = np.interp(indices, np.arange(len(audio_1d)), audio_1d)
+            max_value = np.max(np.abs(modulated_audio))
+            modulated_audio /= max_value
+            self.audio[:, channel] = modulated_audio
+        sf.write(output_file, self.audio, self.samplerate)
+
+class LowPassFilter(AudioProcessor):
+    def apply_lowpass_filter(self, output_file, cutoff_frequency):
+        filtered_audio = self.audio.low_pass_filter(cutoff_frequency)
+        filtered_audio.export(output_file, format='wav')
 
 
 # Ejemplo de uso de las clases y la interfaz
