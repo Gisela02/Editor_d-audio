@@ -31,28 +31,28 @@ class AudioProcessor:
 
 class RobotEffect(AudioProcessor):
     def apply_robot_effect(self, output_file, modulation_factor=0.1, pitch_factor=0.9):
-        num_channels = self.audio.shape[1]  # Obtener el número de canales
+        num_channels = self.audio.shape[1]  # Obtenir el número de canals
         mod = np.sin(2 * np.pi * np.arange(0, len(self.audio)) * (1.0 / self.samplerate) * modulation_factor)
 
         for channel in range(num_channels):
-            audio_1d = self.audio[:, channel]  # Obtener el canal actual como un arreglo unidimensional
+            audio_1d = self.audio[:, channel]  # Obtenir el canal actual com una millora unidimensional
             
-            mod_channel = mod[:len(audio_1d)]  # Ajustar el tamaño de mod al tamaño del canal actual
+            mod_channel = mod[:len(audio_1d)]  # Ajustar el tamañ de mod al tamañ del canal actual
 
-            # Calcular los índices de muestreo modulados
+            # Calcular els índexs de mostreig modulats
             indices = np.arange(len(audio_1d)) + mod_channel * self.samplerate * pitch_factor
 
-            # Aplicar interpolación lineal para obtener los valores de audio modulados
+            # Aplicar interpolació lineal per obtenir els valors d'àudio modulats
             modulated_audio = np.interp(indices, np.arange(len(audio_1d)), audio_1d)
 
-            # Normalizar el audio modulado
+            # Normalitzar l'àudio modulat
             max_value = np.max(np.abs(modulated_audio))
             modulated_audio /= max_value
 
-            # Asignar el audio modulado al canal actual
+            # Assignar l'àudio modulat al canal actual
             self.audio[:, channel] = modulated_audio
 
-        # Guardar el audio modulado en el archivo de salida
+        # Guardar l'àudio modulat en el fitxer de sortida
         sf.write(output_file, self.audio, self.samplerate)
 
 
@@ -122,35 +122,3 @@ class HighPassFilter(AudioProcessor):
         audio = AudioSegment.from_file(self.input_file)
         filtered_audio = audio.high_pass_filter(cutoff_frequency)
         filtered_audio.export(output_file, format="wav")
-
-
-# Ejemplo de uso de las clases y la interfaz
-#input_file = "Segment.wav"
-
-# Crear instancia de la clase AudioProcessor y convertir a WAV
-#audio_processor = AudioProcessor(input_file)
-#output_file_wav = "Summer_Wine.wav"
-#audio_processor.convert_to_wav(output_file_wav)
-
-# Crear instancia de la clase RobotEffect y aplicar efecto de robot
-#robot_effect = RobotEffect(input_file)  
-#output_file_robot = "Robot.wav"
-#robot_effect.apply_robot_effect(output_file_robot)
-
-# Crear instancia de la clase EchoEffect y aplicar efecto de eco
-"""echo_effect = EchoEffect(input_file)
-output_file_echo = "Echo.wav"
-echo_effect.apply_echo_effect(output_file_echo)
-
-flanger_effect = FlangerEffect(input_file)
-output_file_flanger = "Flanger.wav"
-flanger_effect.apply_flanger_effect(output_file_flanger)
-"""
-# Reproducir el audio original
-#audio_processor.play_audio()
-
-# Reproducir el audio con el efecto de robot
-#robot_effect.play_audio()
-
-# Reproducir el audio con el efecto de eco
-#echo_effect.play_audio()
