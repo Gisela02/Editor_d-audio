@@ -8,7 +8,6 @@ from functools import partial
 from pydub import AudioSegment
 from audio_processor import AudioProcessor, EchoEffect, FlangerEffect, RobotEffect, PitufoEffect, LowEffect, LowPassFilter, HighPassFilter
 from PIL import Image
-from PIL import ImageTk
 import ffmpeg
 import os
 
@@ -53,8 +52,7 @@ class SoundFix:
         self.btn_convert_to_wav.place(relx=0.7, rely=0.15, anchor=tk.S)        
 
         # Botó para retallar el fitxer d'àudio
-        button_img = tk.PhotoImage(file="tall.png")
-        self.btn_trim_audio = ttk.Button(self.root, text="Retallar Audio", image=button_img, compound="left", command=self.trim_audio)
+        self.btn_trim_audio = ttk.Button(self.root, text="Retallar Audio", command=self.trim_audio)
         self.btn_trim_audio.pack()
         self.btn_trim_audio.place(relx=0.2, rely=0.85, anchor=tk.S)
 
@@ -64,7 +62,7 @@ class SoundFix:
         self.btn_load_and_play.place(relx=0.5, rely=0.85, anchor=tk.S)
         
         # Botó per parar la reproducció d'àudio
-        self.btn_stop_audio = ttk.Button(self.root, text="Pause", command=self.stop_audio)
+        self.btn_stop_audio = ttk.Button(self.root, text="Stop", command=self.stop_audio)
         self.btn_stop_audio.pack()
         self.btn_stop_audio.place(relx=0.8, rely=0.85, anchor=tk.S)
 
@@ -172,7 +170,7 @@ class SoundFix:
         if self.input_file:
             flanger_effect = FlangerEffect(self.input_file)
             input_filename, input_extension = os.path.splitext(self.input_file)
-            output_file_flanger = input_filename + "Flanger.wav"
+            output_file_flanger = input_filename + "_Flanger.wav"
             flanger_effect.apply_flanger_effect(output_file_flanger)
             messagebox.showinfo("Efecte Flanger", "L'efecte Flanger s'ha aplicat correctament!.")
         else:
