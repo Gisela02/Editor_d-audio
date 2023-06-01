@@ -2,10 +2,6 @@ import numpy as np
 import soundfile as sf
 import sounddevice as sd
 from pydub import AudioSegment
-import pyrubberband
-import librosa
-import subprocess
-import ffmpeg
 from pydub.playback import play
 
 class AudioProcessor:
@@ -36,22 +32,16 @@ class RobotEffect(AudioProcessor):
 
         for channel in range(num_channels):
             audio_1d = self.audio[:, channel]  # Obtenir el canal actual com una millora unidimensional
-            
             mod_channel = mod[:len(audio_1d)]  # Ajustar el tamañ de mod al tamañ del canal actual
-
             # Calcular els índexs de mostreig modulats
             indices = np.arange(len(audio_1d)) + mod_channel * self.samplerate * pitch_factor
-
             # Aplicar interpolació lineal per obtenir els valors d'àudio modulats
             modulated_audio = np.interp(indices, np.arange(len(audio_1d)), audio_1d)
-
             # Normalitzar l'àudio modulat
             max_value = np.max(np.abs(modulated_audio))
             modulated_audio /= max_value
-
             # Assignar l'àudio modulat al canal actual
             self.audio[:, channel] = modulated_audio
-
         # Guardar l'àudio modulat en el fitxer de sortida
         sf.write(output_file, self.audio, self.samplerate)
 
